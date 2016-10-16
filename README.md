@@ -8,4 +8,6 @@
 
 ### Monads ###
 
-* unit, flatMap, map, map2
+* unit, flatMap, map, map2, sequence, traverse, replicate, filterM
+* Id Monad
+* State Monad
