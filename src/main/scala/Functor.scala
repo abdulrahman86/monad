@@ -81,3 +81,26 @@ object Id{
     override def unit[A]: (=> A) => Id[A] = a => Id(a)
   }
 }
+
+case class Reader[R, A](run: R => A)
+
+object Reader{
+
+  implicit def readerFunctor[R] = new Functor[({type f[X] = Reader[R, X]})#f]{
+
+    override def map[A, B]: (Reader[R, A]) => ((A) => B) => Reader[R, B] =
+      r => f => Reader((in: R) => f(r.run(in)))
+  }
+
+  implicit def readerMonad[R] = new Monad[({type f[X] = Reader[R, X]})#f] {
+
+    override implicit def functor: Functor[({type f[X] = Reader[R, X]})#f] = readerFunctor[R]
+
+    override def compose[A, B, C]: ((A) => Reader[R, B]) => ((B) => Reader[R, C]) => (A) => Reader[R, C] =
+      f1 => f2 => a => {
+        Reader((r: R) => f2(f1(a).run(r)).run(r))
+      }
+
+    override def unit[A]: (=> A) => Reader[R, A] = a => Reader((r: R) => a)
+  }
+}

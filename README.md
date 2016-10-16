@@ -11,3 +11,4 @@
 * unit, flatMap, map, map2, sequence, traverse, replicate, filterM
 * Id Monad
 * State Monad
+* Reader Monad
