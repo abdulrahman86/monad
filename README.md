@@ -12,3 +12,4 @@
 * Id Monad
 * State Monad
 * Reader Monad
+* application function in monad
