@@ -38,6 +38,8 @@ trait Monad[F[_]] extends Functor[F]{
     case n => map2(in)(replicateM(n-1)(in))(_ :: _)
   }
   def compose[A, B, C] : (A => F[B]) => (B => F[C]) => (A => F[C])
+
+  def ap[S, T] : F[S => T] => F[S] => F[T] = fst => fs => flatMap(fst)(f => map(fs)(s => f(s)))
 }
 
 object Monad {
@@ -57,6 +59,26 @@ object Monad {
       }
 
     override def unit[A]: (=>A) => State[S, A] = a => (State((s: S)  => (s, a)))
+  }
+
+  implicit def eitherFunctor[E] = new Functor[({type f[X] = Either[E, X]})#f] {
+    override def map[A, B]: (Either[E, A]) => ((A) => B) => Either[E, B] =
+      e => f => e.right.map(f)
+  }
+
+  implicit def eitherMonad[E] = new Monad[({type f[X] = Either[E, X]}) #f] {
+
+    override implicit def functor: Functor[({type f[X] = scala.Either[E, X]})#f] = eitherFunctor[E]
+
+    override def compose[A, B, C]: ((A) => Either[E, B]) => ((B) => Either[E, C]) => (A) => Either[E, C] =
+      feb => fec => a => {
+        feb(a) match {
+          case x : Left[E, B] => Left(x.a)
+          case x : Right[E, B] => fec(x.b)
+        }
+      }
+
+    override def unit[A]: (=>A) => Either[E, A] = a => Right(a)
   }
 }
 
